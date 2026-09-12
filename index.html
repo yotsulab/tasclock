@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#EAEEEC">
+<title>今日の時計とタスク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #EAEEEC;
+    --surface: #FFFFFF;
+    --ink: #202B26;
+    --ink-soft: #5B6A63;
+    --accent: #3F6E5E;
+    --accent-soft: #E4EDE9;
+    --accent-warm: #C98A3B;
+    --accent-warm-soft: #F6EADA;
+    --accent-red: #B1503A;
+    --accent-red-soft: #F3E3DE;
+    --line: #D7DED9;
+    --shadow: 0 1px 2px rgba(32,43,38,0.06), 0 6px 16px rgba(32,43,38,0.05);
+    --radius: 10px;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html{
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  html, body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    overflow-x: hidden;
+    width: 100%;
+    /* iPhoneのノッチ・丸角に文字がかぶらないように余白を確保 */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  button{
+    font-family: inherit;
+    cursor:pointer;
+  }
+
+  :focus-visible{
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Clock hero ---------- */
+
+  .clock-hero{
+    padding: 28px 16px 20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    width: 100%;
+  }
+
+  .date-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 8px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    margin-bottom: 4px;
+    max-width: 100%;
+  }
+
+  .date-nav button{
+    background:none;
+    border:none;
+    color: var(--ink-soft);
+    font-size: 18px;
+    line-height:1;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .date-nav button:hover{ background: rgba(63,110,94,0.08); color: var(--ink); }
+
+  .date-label{
+    white-space: nowrap;
+  }
+
+  .today-pill{
+    display:none;
+    margin-left: 2px;
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 1px 8px;
+    background: var(--accent-soft);
+  }
+  .date-nav.is-today .today-pill{ display:inline-block; }
+
+  .clock-face{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(40px, 13vw, 92px);
+    letter-spacing: 0;
+    line-height: 1;
+    color: var(--ink);
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .clock-face .sec{
+    color: var(--accent);
+    font-size: 0.55em;
+    vertical-align: baseline;
+    margin-left: 4px;
+  }
+
+  /* ---------- Tasks section ---------- */
+
+  .tasks-section{
+    flex:1;
+    padding: 8px 20px 40px;
+    max-width: 1000px;
+    width:100%;
+    margin: 0 auto;
+  }
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+
+  .section-head h1{
+    font-size: 16px;
+    font-weight: 600;
+    margin:0;
+  }
+
+  .task-count{
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .quick-add{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .quick-add input[type="text"]{
+    flex:1;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    font-size: 15px;
+    color: var(--ink);
+    font-family: inherit;
+  }
+  .quick-add input[type="text"]::placeholder{ color: #9AA6A0; }
+
+  .quick-add button{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .quick-add button:hover{ background: #345d4f; }
+
+  .tasks-grid{
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .task-card{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--line);
+    padding: 14px 16px;
+    text-align:left;
+    border-top:none; border-right:none; border-bottom:none;
+    width:100%;
+  }
+  .task-card.status-ontime{ border-left-color: var(--accent); }
+  .task-card.status-off{ border-left-color: var(--accent-warm); }
+
+  .task-card .t-title{
+    flex:1;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .task-card .t-time{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    flex-shrink:0;
+  }
+
+  .task-card .t-badge{
+    flex-shrink:0;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .task-card.status-ontime .t-badge{ color: var(--accent); }
+  .task-card.status-off .t-badge{ color: var(--accent-warm); }
+
+  .empty-state{
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 30px 4px;
+    text-align:center;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+  }
+
+  /* Landscape phones: viewport height is short, so shrink the clock and paddings */
+  @media (orientation: landscape) and (max-height: 500px){
+    .clock-hero{
+      padding: 10px 16px 8px;
+    }
+    .date-nav{
+      margin-bottom: 2px;
+      font-size: 11px;
+    }
+    .clock-face{
+      font-size: clamp(28px, 8vw, 48px);
+    }
+    .tasks-section{
+      padding: 4px 16px 20px;
+    }
+    .section-head{
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+    }
+    .quick-add{
+      margin-bottom: 12px;
+    }
+  }
+
+  /* Landscape: roughly 5 across */
+  @media (orientation: landscape) and (min-width: 620px){
+    .tasks-grid{
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .task-card{
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      flex: 1 1 calc(20% - 8px);
+      min-width: 150px;
+      min-height: 90px;
+      gap: 6px;
+    }
+    .task-card .t-title{
+      white-space: normal;
+      width:100%;
+    }
+  }
+
+  /* ---------- Detail sheet ---------- */
+
+  .backdrop{
+    position: fixed; inset:0;
+    background: rgba(32,43,38,0.35);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.18s ease;
+    z-index: 20;
+  }
+  .backdrop.open{ opacity:1; pointer-events:auto; }
+
+  .sheet{
+    position: fixed;
+    left:0; right:0; bottom:0;
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 30px rgba(32,43,38,0.18);
+    padding: 22px calc(22px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(22px + env(safe-area-inset-left));
+    transform: translateY(100%);
+    transition: transform 0.22s ease;
+    z-index: 21;
+    max-height: 86vh;
+    overflow-y: auto;
+  }
+  .sheet.open{ transform: translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .backdrop, .sheet{ transition: none; }
+  }
+
+  @media (orientation: landscape) and (max-height: 500px){
+    .sheet{
+      max-height: 92vh;
+      padding-top: 14px;
+    }
+    .sheet-title{ font-size: 16px; }
+    .field-label{ margin: 10px 0 6px; }
+    .sheet textarea{ min-height: 64px; }
+  }
+
+  .sheet-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .sheet-title{
+    font-size: 18px;
+    font-weight: 600;
+    line-height:1.4;
+    word-break: break-word;
+  }
+
+  .sheet-close{
+    background:none;
+    border:none;
+    color: var(--ink-soft);
+    font-size: 22px;
+    line-height:1;
+    padding: 2px 6px;
+    flex-shrink:0;
+  }
+
+  .field-label{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 16px 0 8px;
+  }
+
+  .outcome-options{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .outcome-btn{
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  .outcome-btn.selected[data-val="ontime"]{
+    background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
+  }
+  .outcome-btn.selected[data-val="off"]{
+    background: var(--accent-warm-soft); border-color: var(--accent-warm); color: var(--accent-warm);
+  }
+
+  .sheet textarea{
+    width:100%;
+    min-height: 110px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    resize: vertical;
+  }
+
+  .sheet-actions{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-top: 22px;
+  }
+
+  .save-btn{
+    background: var(--accent);
+    color: #fff;
+    border:none;
+    border-radius: var(--radius);
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .save-btn:hover{ background: #345d4f; }
+
+  .delete-btn{
+    background:none;
+    border:none;
+    color: var(--accent-red);
+    font-size: 13px;
+    padding: 8px 4px;
+  }
+
+  .saved-flag{
+    font-size: 12px;
+    color: var(--accent);
+    margin-left: 10px;
+    opacity:0;
+    transition: opacity 0.2s ease;
+  }
+  .saved-flag.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+  <div class="clock-hero">
+    <div class="date-nav" id="dateNav">
+      <button id="prevDay" aria-label="前の日">‹</button>
+      <span class="date-label" id="dateLabel">9月12日(土)</span>
+      <span class="today-pill">today</span>
+      <button id="nextDay" aria-label="次の日">›</button>
+    </div>
+    <div class="clock-face" id="clockFace">00:00<span class="sec">00</span></div>
+  </div>
+
+  <div class="tasks-section">
+    <div class="section-head">
+      <h1>タスク</h1>
+      <span class="task-count" id="taskCount">0件</span>
+    </div>
+
+    <form class="quick-add" id="quickAddForm">
+      <input type="text" id="quickAddInput" placeholder="タスクを入力して追加" maxlength="60">
+      <button type="submit">追加</button>
+    </form>
+
+    <div class="tasks-grid" id="tasksGrid"></div>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head">
+      <div class="sheet-title" id="sheetTitle">タスク名</div>
+      <button class="sheet-close" id="sheetClose" aria-label="閉じる">×</button>
+    </div>
+
+    <div class="field-label">時間通りだった？</div>
+    <div class="outcome-options" id="outcomeOptions">
+      <button type="button" class="outcome-btn" data-val="ontime">予定通り</button>
+      <button type="button" class="outcome-btn" data-val="off">ずれた</button>
+      <button type="button" class="outcome-btn" data-val="none">未記入</button>
+    </div>
+
+    <div class="field-label">実際にはどうだったか</div>
+    <textarea id="outcomeMemo" placeholder="実際の様子や気づいたことをメモ"></textarea>
+
+    <div class="sheet-actions">
+      <button class="delete-btn" id="deleteBtn">このタスクを削除</button>
+      <div>
+        <button class="save-btn" id="saveBtn">保存</button>
+        <span class="saved-flag" id="savedFlag">保存しました</span>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORE_PREFIX = "clockTaskApp:";
+  var currentDate = new Date();
+  var activeTaskId = null;
+
+  function pad(n){ return String(n).padStart(2, "0"); }
+
+  function dateKey(d){
+    return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+  }
+
+  function isSameDay(a, b){
+    return dateKey(a) === dateKey(b);
+  }
+
+  function formatDateLabel(d){
+    var week = ["日","月","火","水","木","金","土"][d.getDay()];
+    return (d.getMonth()+1) + "月" + d.getDate() + "日(" + week + ")";
+  }
+
+  // ---------- Clock ----------
+
+  function tickClock(){
+    var now = new Date();
+    var h = pad(now.getHours());
+    var m = pad(now.getMinutes());
+    var s = pad(now.getSeconds());
+    document.getElementById("clockFace").innerHTML =
+      h + ":" + m + '<span class="sec">' + s + "</span>";
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  // ---------- Storage ----------
+
+  function loadTasks(d){
+    try{
+      var raw = localStorage.getItem(STORE_PREFIX + dateKey(d));
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveTasks(d, tasks){
+    localStorage.setItem(STORE_PREFIX + dateKey(d), JSON.stringify(tasks));
+  }
+
+  function makeId(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  // ---------- Rendering ----------
+
+  function renderDateNav(){
+    document.getElementById("dateLabel").textContent = formatDateLabel(currentDate);
+    var nav = document.getElementById("dateNav");
+    if(isSameDay(currentDate, new Date())){
+      nav.classList.add("is-today");
+    } else {
+      nav.classList.remove("is-today");
+    }
+  }
+
+  function renderTasks(){
+    var tasks = loadTasks(currentDate);
+    var grid = document.getElementById("tasksGrid");
+    grid.innerHTML = "";
+    document.getElementById("taskCount").textContent = tasks.length + "件";
+
+    if(tasks.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "まだタスクがありません。上の欄から追加してください。";
+      grid.appendChild(empty);
+      return;
+    }
+
+    tasks.forEach(function(t){
+      var card = document.createElement("button");
+      card.type = "button";
+      card.className = "task-card";
+      if(t.outcome === "ontime") card.classList.add("status-ontime");
+      if(t.outcome === "off") card.classList.add("status-off");
+
+      var title = document.createElement("span");
+      title.className = "t-title";
+      title.textContent = t.title;
+      card.appendChild(title);
+
+      var badge = document.createElement("span");
+      badge.className = "t-badge";
+      badge.textContent = t.outcome === "ontime" ? "予定通り" : (t.outcome === "off" ? "ずれた" : "未記入");
+      card.appendChild(badge);
+
+      card.addEventListener("click", function(){ openDetail(t.id); });
+      grid.appendChild(card);
+    });
+  }
+
+  function refresh(){
+    renderDateNav();
+    renderTasks();
+  }
+
+  // ---------- Add task ----------
+
+  document.getElementById("quickAddForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var input = document.getElementById("quickAddInput");
+    var title = input.value.trim();
+    if(!title) return;
+    var tasks = loadTasks(currentDate);
+    tasks.push({ id: makeId(), title: title, outcome: "none", memo: "" });
+    saveTasks(currentDate, tasks);
+    input.value = "";
+    renderTasks();
+  });
+
+  // ---------- Date nav ----------
+
+  document.getElementById("prevDay").addEventListener("click", function(){
+    currentDate.setDate(currentDate.getDate() - 1);
+    refresh();
+  });
+  document.getElementById("nextDay").addEventListener("click", function(){
+    currentDate.setDate(currentDate.getDate() + 1);
+    refresh();
+  });
+
+  // ---------- Detail sheet ----------
+
+  var backdrop = document.getElementById("backdrop");
+  var sheet = document.getElementById("sheet");
+  var selectedOutcome = "none";
+
+  function openDetail(id){
+    var tasks = loadTasks(currentDate);
+    var task = tasks.find(function(t){ return t.id === id; });
+    if(!task) return;
+    activeTaskId = id;
+    selectedOutcome = task.outcome || "none";
+
+    document.getElementById("sheetTitle").textContent = task.title;
+    document.getElementById("outcomeMemo").value = task.memo || "";
+    document.getElementById("savedFlag").classList.remove("show");
+    updateOutcomeButtons();
+
+    backdrop.classList.add("open");
+    sheet.classList.add("open");
+  }
+
+  function closeDetail(){
+    backdrop.classList.remove("open");
+    sheet.classList.remove("open");
+    activeTaskId = null;
+  }
+
+  function updateOutcomeButtons(){
+    var btns = document.querySelectorAll(".outcome-btn");
+    btns.forEach(function(b){
+      b.classList.toggle("selected", b.getAttribute("data-val") === selectedOutcome);
+    });
+  }
+
+  document.getElementById("outcomeOptions").addEventListener("click", function(e){
+    var btn = e.target.closest(".outcome-btn");
+    if(!btn) return;
+    selectedOutcome = btn.getAttribute("data-val");
+    updateOutcomeButtons();
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", function(){
+    if(!activeTaskId) return;
+    var tasks = loadTasks(currentDate);
+    var task = tasks.find(function(t){ return t.id === activeTaskId; });
+    if(!task) return;
+    task.outcome = selectedOutcome;
+    task.memo = document.getElementById("outcomeMemo").value;
+    saveTasks(currentDate, tasks);
+    renderTasks();
+    var flag = document.getElementById("savedFlag");
+    flag.classList.add("show");
+    setTimeout(function(){ flag.classList.remove("show"); }, 1400);
+  });
+
+  document.getElementById("deleteBtn").addEventListener("click", function(){
+    if(!activeTaskId) return;
+    var tasks = loadTasks(currentDate).filter(function(t){ return t.id !== activeTaskId; });
+    saveTasks(currentDate, tasks);
+    renderTasks();
+    closeDetail();
+  });
+
+  document.getElementById("sheetClose").addEventListener("click", closeDetail);
+  backdrop.addEventListener("click", closeDetail);
+
+  // ---------- Init ----------
+
+  refresh();
+
+})();
+</script>
+</body>
+</html>
