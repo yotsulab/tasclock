@@ -31,8 +31,9 @@
   *{ box-sizing: border-box; }
 
   html{
-    overflow-x: hidden;
+    overflow: hidden;
     width: 100%;
+    height: 100%;
   }
 
   html, body{
@@ -41,16 +42,16 @@
     color: var(--ink);
     font-family: 'IBM Plex Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-    min-height: 100dvh;
   }
 
   body{
     display:flex;
     flex-direction:column;
     align-items:stretch;
-    overflow-x: hidden;
+    overflow: hidden;
     width: 100%;
+    height: var(--app-height, 100dvh);
+    min-height: 0;
     /* iPhoneのノッチ・丸角に文字がかぶらないように余白を確保 */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -71,10 +72,13 @@
   /* ---------- Clock hero ---------- */
 
   .clock-hero{
-    padding: 28px 16px 20px;
+    flex: 0 0 70%;
+    min-height: 0;
+    padding: clamp(10px, 3vh, 28px) 16px clamp(8px, 2vh, 20px);
     display:flex;
     flex-direction:column;
     align-items:center;
+    justify-content:center;
     text-align:center;
     width: 100%;
   }
@@ -86,7 +90,7 @@
     gap: 8px;
     color: var(--ink-soft);
     font-size: 13px;
-    margin-bottom: 4px;
+    margin-bottom: clamp(8px, 2vh, 18px);
     max-width: 100%;
   }
 
@@ -121,7 +125,7 @@
     font-family: 'IBM Plex Mono', monospace;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    font-size: clamp(40px, 13vw, 92px);
+    font-size: clamp(58px, min(22vw, 36vh), 220px);
     letter-spacing: 0;
     line-height: 1;
     color: var(--ink);
@@ -139,11 +143,20 @@
   /* ---------- Tasks section ---------- */
 
   .tasks-section{
-    flex:1;
-    padding: 8px 20px 40px;
-    max-width: 1000px;
+    flex: 0 0 30%;
+    min-height: 0;
+    padding: 10px clamp(12px, 3vw, 24px) max(10px, env(safe-area-inset-bottom));
+    max-width: 1200px;
     width:100%;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    background: rgba(255,255,255,0.28);
+    box-shadow: 0 -8px 24px rgba(32,43,38,0.04);
   }
 
   .section-head{
@@ -151,8 +164,9 @@
     align-items:baseline;
     justify-content:space-between;
     border-bottom: 1px solid var(--line);
-    padding-bottom: 10px;
-    margin-bottom: 16px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    flex: 0 0 auto;
   }
 
   .section-head h1{
@@ -169,7 +183,8 @@
   .quick-add{
     display:flex;
     gap: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
+    flex: 0 0 auto;
   }
 
   .quick-add input[type="text"]{
@@ -177,7 +192,7 @@
     border: 1px solid var(--line);
     background: var(--surface);
     border-radius: var(--radius);
-    padding: 11px 14px;
+    padding: 9px 12px;
     font-size: 15px;
     color: var(--ink);
     font-family: inherit;
@@ -200,6 +215,14 @@
     display:flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 4px 14px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
   }
 
   .task-card{
@@ -252,27 +275,42 @@
     border-radius: var(--radius);
   }
 
-  /* Landscape phones: viewport height is short, so shrink the clock and paddings */
+  /* 横向きでも時計を主役にし、下のタスク欄だけをスクロール */
   @media (orientation: landscape) and (max-height: 500px){
     .clock-hero{
-      padding: 10px 16px 8px;
+      padding: 6px 16px 4px;
     }
     .date-nav{
-      margin-bottom: 2px;
+      margin-bottom: 4px;
       font-size: 11px;
     }
     .clock-face{
-      font-size: clamp(28px, 8vw, 48px);
+      font-size: clamp(72px, min(18vw, 36vh), 190px);
     }
     .tasks-section{
-      padding: 4px 16px 20px;
+      padding: 6px 16px max(6px, env(safe-area-inset-bottom));
     }
     .section-head{
-      margin-bottom: 10px;
-      padding-bottom: 6px;
+      margin-bottom: 5px;
+      padding-bottom: 4px;
     }
     .quick-add{
-      margin-bottom: 12px;
+      margin-bottom: 5px;
+    }
+    .quick-add input[type="text"]{
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+    .quick-add button{
+      padding: 0 16px;
+      font-size: 13px;
+    }
+    .tasks-grid{
+      gap: 8px;
+      padding-bottom: 8px;
+    }
+    .task-card{
+      padding: 10px 12px;
     }
   }
 
@@ -280,20 +318,29 @@
   @media (orientation: landscape) and (min-width: 620px){
     .tasks-grid{
       flex-direction: row;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
     .task-card{
       flex-direction: column;
       align-items: flex-start;
       justify-content: center;
-      flex: 1 1 calc(20% - 8px);
-      min-width: 150px;
-      min-height: 90px;
+      flex: 0 0 min(30vw, 340px);
+      min-width: 190px;
+      min-height: 100%;
       gap: 6px;
     }
     .task-card .t-title{
       white-space: normal;
       width:100%;
+    }
+  }
+
+  /* 縦向きの小さな画面では、文字が横にはみ出さない上限にする */
+  @media (orientation: portrait){
+    .clock-face{
+      font-size: clamp(58px, 21vw, 108px);
     }
   }
 
@@ -495,6 +542,27 @@
 <script>
 (function(){
   "use strict";
+
+  // iPhone Safariは画面回転直後に100vhの値が一時的にずれるため、
+  // 実際に見えている高さをCSSへ渡してレイアウトを自動調整する。
+  function syncViewportHeight(){
+    var height = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty("--app-height", Math.round(height) + "px");
+  }
+
+  var viewportTimer = null;
+  function scheduleViewportSync(){
+    syncViewportHeight();
+    clearTimeout(viewportTimer);
+    viewportTimer = setTimeout(syncViewportHeight, 250);
+  }
+
+  syncViewportHeight();
+  window.addEventListener("resize", scheduleViewportSync);
+  window.addEventListener("orientationchange", scheduleViewportSync);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", scheduleViewportSync);
+  }
 
   var STORE_PREFIX = "clockTaskApp:";
   var currentDate = new Date();
